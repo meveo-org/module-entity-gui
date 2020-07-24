@@ -1,0 +1,114 @@
+[ {
+  "active" : true,
+  "code" : "EntityGUIModule",
+  "description" : "Entity GUI Module",
+  "license" : "GPL",
+  "currentVersion" : "0.0.1",
+  "transient" : true,
+  "codeOnly" : false,
+  "inDraft" : true,
+  "moduleItems" : [ {
+    "dtoClassName" : "org.meveo.api.dto.notification.ScriptNotificationDto",
+    "dtoData" : {
+      "active" : true,
+      "code" : "GenerateCustomEntityGUI",
+      "classNameFilter" : "org.meveo.model.customEntities.CustomEntityInstance",
+      "eventTypeFilter" : "CREATED",
+      "elFilter" : "#{event.getCetCode() == 'ENTITY_GUI_CONFIG'}",
+      "scriptInstanceCode" : "org.meveo.script.GenerateCustomEntityGUIScript",
+      "scriptParams" : { },
+      "priority" : 1
+    }
+  }, {
+    "dtoClassName" : "org.meveo.api.dto.CustomEntityTemplateDto",
+    "dtoData" : {
+      "code" : "ENTITY_GUI_CONFIG",
+      "name" : "Entity UI Application Configuration",
+      "description" : "Create GUI for a Custom Entity",
+      "customEntityCategoryCode" : "ENTITY_UI",
+      "availableStorages" : [ "SQL" ],
+      "sqlStorageConfiguration" : {
+        "storeAsTable" : false
+      },
+      "samples" : [ ],
+      "fields" : [ {
+        "code" : "label",
+        "description" : "The label that shows up for menu's and notifications regarding this entity",
+        "fieldType" : "STRING",
+        "accountLevel" : "CE_ENTITY_GUI_CONFIG",
+        "appliesTo" : "CE_ENTITY_GUI_CONFIG",
+        "useInheritedAsDefaultValue" : false,
+        "storageType" : "SINGLE",
+        "valueRequired" : true,
+        "versionable" : false,
+        "triggerEndPeriodEvent" : false,
+        "listValues" : { },
+        "allowEdit" : true,
+        "hideOnNew" : false,
+        "maxValue" : 255,
+        "contentTypes" : [ ],
+        "fileExtensions" : [ ],
+        "saveOnExplorer" : false,
+        "guiPosition" : "tab:Entity UI Application Configuration:0;field:1",
+        "identifier" : false,
+        "storages" : [ "SQL" ],
+        "samples" : [ ],
+        "summary" : false,
+        "filter" : false,
+        "unique" : false,
+        "matrixColumns" : [ ]
+      }, {
+        "code" : "name",
+        "description" : "The Entity's name",
+        "fieldType" : "STRING",
+        "accountLevel" : "CE_ENTITY_GUI_CONFIG",
+        "appliesTo" : "CE_ENTITY_GUI_CONFIG",
+        "useInheritedAsDefaultValue" : false,
+        "storageType" : "SINGLE",
+        "valueRequired" : true,
+        "versionable" : false,
+        "triggerEndPeriodEvent" : false,
+        "listValues" : { },
+        "allowEdit" : true,
+        "hideOnNew" : false,
+        "maxValue" : 255,
+        "contentTypes" : [ ],
+        "fileExtensions" : [ ],
+        "saveOnExplorer" : false,
+        "guiPosition" : "tab:Entity UI Application Configuration:0;field:0",
+        "identifier" : false,
+        "storages" : [ "SQL" ],
+        "samples" : [ ],
+        "summary" : false,
+        "filter" : false,
+        "unique" : false,
+        "matrixColumns" : [ ]
+      } ],
+      "actions" : [ ]
+    }
+  }, {
+    "dtoClassName" : "org.meveo.api.dto.ScriptInstanceDto",
+    "dtoData" : {
+      "active" : true,
+      "code" : "org.meveo.script.GenerateCustomEntityGUIScript",
+      "description" : "GenerateCustomEntityGUIScript",
+      "inputs" : [ ],
+      "outputs" : [ ],
+      "generateOutputs" : false,
+      "type" : "JAVA",
+      "script" : "package org.meveo.script;\r\n\r\nimport java.util.Map;\r\nimport org.meveo.service.script.Script;\r\nimport org.meveo.admin.exception.BusinessException;\r\nimport org.slf4j.Logger;\r\nimport org.slf4j.LoggerFactory;\r\n\r\npublic class GenerateCustomEntityGUIScript extends Script {\r\n\r\n    private static final Logger LOG = LoggerFactory.getLogger(GenerateCustomEntityGUIScript.class);\r\n\r\n    @Override\r\n    public void execute(Map<String, Object> parameters) throws BusinessException {\r\n        super.execute(parameters);\r\n        LOG.debug(\"GenerateCustomEntityGUIScript ==> START\");\r\n        LOG.debug(\"parameters: {}\", parameters);\r\n        for (Map.Entry<String, Object> entry : parameters.entrySet()) {\r\n            LOG.debug(\"{}: {}\", entry.getKey(), entry.getValue());\r\n        }\r\n        LOG.debug(\"GenerateCustomEntityGUIScript ==> END\");\r\n    }\r\n}\r\n",
+      "executionRoles" : [ ],
+      "sourcingRoles" : [ ],
+      "mavenDependencies" : [ ],
+      "importScriptInstances" : [ ]
+    }
+  }, {
+    "dtoClassName" : "org.meveo.api.dto.CustomEntityCategoryDto",
+    "dtoData" : {
+      "code" : "ENTITY_UI",
+      "name" : "Entity GUI"
+    }
+  } ],
+  "moduleDependencies" : [ ],
+  "moduleFiles" : [ ]
+} ]
