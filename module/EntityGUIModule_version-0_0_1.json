@@ -16,7 +16,9 @@
       "eventTypeFilter" : "CREATED",
       "elFilter" : "#{event.getCetCode() == 'ENTITY_GUI_CONFIG'}",
       "scriptInstanceCode" : "org.meveo.script.GenerateCustomEntityGUIScript",
-      "scriptParams" : { },
+      "scriptParams" : {
+        "config" : "${event}"
+      },
       "priority" : 1
     }
   }, {
