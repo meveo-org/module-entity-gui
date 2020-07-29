@@ -1,0 +1,43 @@
+[ {
+  "active" : true,
+  "code" : "GitRepoModuleInstaller",
+  "description" : "Module that installs modules in a Git Repo",
+  "license" : "GPL",
+  "currentVersion" : "0.0.1",
+  "meveoVersionBase" : "6.9.0",
+  "transient" : true,
+  "codeOnly" : false,
+  "inDraft" : true,
+  "moduleItems" : [ {
+    "dtoClassName" : "org.meveo.api.dto.notification.ScriptNotificationDto",
+    "dtoData" : {
+      "active" : true,
+      "code" : "InstallModuleFromGitRepo",
+      "classNameFilter" : "org.meveo.model.git.GitRepository",
+      "eventTypeFilter" : "CREATED",
+      "scriptInstanceCode" : "org.meveo.script.InstallModuleFromGitRepoScript",
+      "scriptParams" : {
+        "repo" : "#{event}"
+      },
+      "priority" : 1
+    }
+  }, {
+    "dtoClassName" : "org.meveo.api.dto.ScriptInstanceDto",
+    "dtoData" : {
+      "active" : true,
+      "code" : "org.meveo.script.InstallModuleFromGitRepoScript",
+      "description" : "InstallModuleFromGitRepoScript",
+      "inputs" : [ ],
+      "outputs" : [ ],
+      "generateOutputs" : false,
+      "type" : "JAVA",
+      "script" : "package org.meveo.script;\n\nimport java.io.File;\nimport java.io.IOException;\nimport java.io.FileInputStream;\nimport java.io.InputStream;\nimport java.lang.StringBuilder;\nimport java.util.Arrays;\nimport java.util.List;\nimport java.util.Map;\nimport java.util.UUID;\n\nimport org.meveo.admin.exception.BusinessException;\nimport org.meveo.api.dto.module.MeveoModuleDto;\nimport org.meveo.api.exception.MeveoApiException;\nimport org.meveo.api.module.MeveoModuleApi;\nimport org.meveo.api.module.MeveoModuleItemInstaller;\nimport org.meveo.commons.utils.ParamBean;\nimport org.meveo.commons.utils.ParamBeanFactory;\nimport org.meveo.commons.utils.FileUtils;\nimport org.meveo.model.git.GitRepository;\nimport org.meveo.model.module.MeveoModule;\nimport org.meveo.model.persistence.CEIUtils;\nimport org.meveo.service.admin.impl.MeveoModuleService;\nimport org.meveo.service.script.Script;\n\nimport org.slf4j.Logger;\nimport org.slf4j.LoggerFactory;\n\npublic class InstallModuleFromGitRepoScript extends Script {\n\n    private static final Logger LOG = LoggerFactory.getLogger(InstallModuleFromGitRepoScript.class);\n    private MeveoModuleApi meveoModuleApi = getCDIBean(MeveoModuleApi.class);\n    private MeveoModuleService meveoModuleService = getCDIBean(MeveoModuleService.class);\n    private MeveoModuleItemInstaller meveoModuleItemInstaller = getCDIBean(MeveoModuleItemInstaller.class);\n    private String gitPath;\n\n    public InstallModuleFromGitRepoScript() {\n        ParamBeanFactory paramBeanFactory = getCDIBean(ParamBeanFactory.class);\n        ParamBean config = paramBeanFactory.getInstance();\n        String providerRoot = config.getProperty(\"provider.rootDir\", \"default\");\n        String dataRoot = config.getProperty(\"providers.rootDir\", File.separator + \"meveodata\");\n        StringBuilder basePath = (new StringBuilder(dataRoot)).append(File.separator).append(providerRoot)\n                .append(File.separator).append(\"git\").append(File.separator);\n        gitPath = basePath.toString();\n    }\n\n    @Override\n    public void execute(Map<String, Object> parameters) throws BusinessException {\n        super.execute(parameters);\n        LOG.debug(\"InstallModuleFromGitRepoScript ==> START\");\n\n        GitRepository repo = (GitRepository) parameters.get(\"repo\");\n        String code = repo.getCode();\n        String repositoryPath = gitPath + code;\n        String moduleDirectoryPath = repositoryPath + File.separator + \"module\";\n\n        try {\n            LOG.debug(\"code : {}\", code);\n            LOG.debug(\"moduleDirectoryPath : {}\", moduleDirectoryPath);\n\n            File[] moduleFiles = FileUtils.listFiles(moduleDirectoryPath, Arrays.asList(\"json\"));\n\n            for (File moduleFile : moduleFiles) {\n                LOG.debug(\"installing module : {}\", moduleFile.getPath());\n                InputStream moduleFileStream = new FileInputStream(moduleFile);\n                List<MeveoModuleDto> modules = meveoModuleApi.getModules(moduleFileStream);\n                meveoModuleApi.importJSON(modules, true);\n                for (MeveoModuleDto moduleDto : modules) {\n                    MeveoModule meveoModule = meveoModuleService.findByCode(moduleDto.getCode());\n                    if (meveoModule == null) {\n                        meveoModule = meveoModuleApi.createOrUpdate(moduleDto);\n                    }\n                    meveoModuleItemInstaller.install(meveoModule, moduleDto);\n                }\n            }\n        } catch (IOException ioe) {\n            throw new BusinessException(ioe);\n        } catch (MeveoApiException mae) {\n            throw new BusinessException(mae);\n        }\n\n        LOG.debug(\"InstallModuleFromGitRepoScript ==> END\");\n    }\n}\n",
+      "executionRoles" : [ ],
+      "sourcingRoles" : [ ],
+      "mavenDependencies" : [ ],
+      "importScriptInstances" : [ ]
+    }
+  } ],
+  "moduleDependencies" : [ ],
+  "moduleFiles" : [ ]
+} ]

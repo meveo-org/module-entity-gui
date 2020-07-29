@@ -1,0 +1,90 @@
+[ {
+  "active" : true,
+  "code" : "EntityGUITemplatePath",
+  "description" : "Saves Entity GUI Template Path",
+  "license" : "GPL",
+  "currentVersion" : "0.0.1",
+  "meveoVersionBase" : "6.9.0",
+  "transient" : true,
+  "codeOnly" : false,
+  "inDraft" : true,
+  "moduleItems" : [ {
+    "dtoClassName" : "org.meveo.api.dto.CustomEntityCategoryDto",
+    "dtoData" : {
+      "code" : "ENTITY_UI",
+      "name" : "Entity GUI"
+    }
+  }, {
+    "dtoClassName" : "org.meveo.api.dto.CustomEntityTemplateDto",
+    "dtoData" : {
+      "code" : "TEMPLATE_PATH",
+      "name" : "Template Path",
+      "description" : "Entity GUI template path",
+      "customEntityCategoryCode" : "ENTITY_UI",
+      "availableStorages" : [ "SQL" ],
+      "sqlStorageConfiguration" : {
+        "storeAsTable" : false
+      },
+      "samples" : [ ],
+      "fields" : [ {
+        "code" : "path",
+        "description" : "The path where templates for Entity GUI generation are found.",
+        "fieldType" : "STRING",
+        "accountLevel" : "CE_TEMPLATE_PATH",
+        "appliesTo" : "CE_TEMPLATE_PATH",
+        "useInheritedAsDefaultValue" : false,
+        "storageType" : "SINGLE",
+        "valueRequired" : true,
+        "versionable" : false,
+        "triggerEndPeriodEvent" : false,
+        "listValues" : { },
+        "allowEdit" : true,
+        "hideOnNew" : false,
+        "maxValue" : 255,
+        "contentTypes" : [ ],
+        "fileExtensions" : [ ],
+        "saveOnExplorer" : false,
+        "guiPosition" : "tab:Template Path:0;field:1",
+        "identifier" : false,
+        "storages" : [ "SQL" ],
+        "samples" : [ ],
+        "summary" : false,
+        "filter" : false,
+        "unique" : false,
+        "matrixColumns" : [ ]
+      } ],
+      "actions" : [ ]
+    }
+  }, {
+    "dtoClassName" : "org.meveo.api.dto.notification.ScriptNotificationDto",
+    "dtoData" : {
+      "active" : true,
+      "code" : "SetEntityGuiTemplatePath",
+      "classNameFilter" : "org.meveo.model.git.GitRepository",
+      "eventTypeFilter" : "CREATED",
+      "scriptInstanceCode" : "org.meveo.script.EntityGuiTemplatePathScript",
+      "scriptParams" : {
+        "repo" : "${event}"
+      },
+      "priority" : 1
+    }
+  }, {
+    "dtoClassName" : "org.meveo.api.dto.ScriptInstanceDto",
+    "dtoData" : {
+      "active" : true,
+      "code" : "org.meveo.script.EntityGuiTemplatePathScript",
+      "description" : "Sets the template path to the entity_templates directory",
+      "inputs" : [ ],
+      "outputs" : [ ],
+      "generateOutputs" : false,
+      "type" : "JAVA",
+      "script" : "package org.meveo.script;\r\n\r\nimport java.io.File;\r\nimport java.lang.StringBuilder;\r\nimport java.util.Map;\r\nimport java.util.UUID;\r\n\r\nimport org.apache.commons.collections.CollectionUtils;\r\nimport org.meveo.admin.exception.BusinessException;\r\nimport org.meveo.api.dto.module.MeveoModuleDto;\r\nimport org.meveo.api.exception.MeveoApiException;\r\nimport org.meveo.commons.utils.ParamBean;\r\nimport org.meveo.commons.utils.ParamBeanFactory;\r\nimport org.meveo.commons.utils.FileUtils;\r\nimport org.meveo.model.crm.custom.CustomFieldValues;\r\nimport org.meveo.model.customEntities.CustomEntityInstance;\r\nimport org.meveo.model.customEntities.CustomEntityTemplate;\r\nimport org.meveo.model.git.GitRepository;\r\nimport org.meveo.model.module.MeveoModule;\r\nimport org.meveo.model.persistence.CEIUtils;\r\nimport org.meveo.service.custom.CustomEntityInstanceService;\r\nimport org.meveo.service.custom.CustomEntityTemplateService;\r\nimport org.meveo.service.script.Script;\r\n\r\nimport org.slf4j.Logger;\r\nimport org.slf4j.LoggerFactory;\r\n\r\npublic class EntityGuiTemplatePathScript extends Script {\r\n\r\n    private static final Logger LOG = LoggerFactory.getLogger(EntityGuiTemplatePathScript.class);\r\n    private CustomEntityInstanceService customEntityInstanceService = getCDIBean(CustomEntityInstanceService.class);\r\n    private CustomEntityTemplateService customEntityTemplateService = getCDIBean(CustomEntityTemplateService.class);\r\n    private String gitPath;\r\n\r\n    public EntityGuiTemplatePathScript() {\r\n        ParamBeanFactory paramBeanFactory = getCDIBean(ParamBeanFactory.class);\r\n        ParamBean config = paramBeanFactory.getInstance();\r\n        String providerRoot = config.getProperty(\"provider.rootDir\", \"default\");\r\n        String dataRoot = config.getProperty(\"providers.rootDir\", File.separator + \"meveodata\");\r\n        StringBuilder basePath = (new StringBuilder(dataRoot)).append(File.separator).append(providerRoot)\r\n                .append(File.separator).append(\"git\").append(File.separator);\r\n        gitPath = basePath.toString();\r\n    }\r\n\r\n    @Override\r\n    public void execute(Map<String, Object> parameters) throws BusinessException {\r\n        super.execute(parameters);\r\n        LOG.debug(\"EntityGuiTemplatePathScript ==> START\");\r\n\r\n        GitRepository repo = (GitRepository) parameters.get(\"repo\");\r\n        String code = repo.getCode();\r\n        String repositoryPath = gitPath + code;\r\n        String templateDirectoryPath = repositoryPath + File.separator + \"entity_templates\";\r\n\r\n        File templateDirectory = new File(templateDirectoryPath);\r\n\r\n        if(templateDirectory.exists() && templateDirectory.isDirectory()) {\r\n            CustomEntityTemplate template = customEntityTemplateService.findByCodeOrDbTablename(\"TEMPLATE_PATH\");\r\n            CustomEntityInstance instance = new CustomEntityInstance();\r\n    \r\n            String uuid = UUID.randomUUID().toString();\r\n            String id = uuid.substring(0, uuid.indexOf(\"-\"));\r\n            \r\n            instance.setCode(\"ENTITY_GUI_TEMPLATE_PATH\");\r\n            instance.setUuid(uuid);\r\n            instance.setCet(template);\r\n            instance.setCetCode(template.getCode());\r\n            CustomFieldValues values = instance.getCfValuesNullSafe();\r\n            values.setValue(\"path\", templateDirectoryPath);\r\n    \r\n            customEntityInstanceService.create(instance);\r\n        }\r\n\r\n        LOG.debug(\"EntityGuiTemplatePathScript ==> END\");\r\n    }\r\n}\r\n",
+      "executionRoles" : [ ],
+      "sourcingRoles" : [ ],
+      "mavenDependencies" : [ ],
+      "importScriptInstances" : [ ]
+    }
+  } ],
+  "moduleDependencies" : [ ],
+  "moduleFiles" : [ ]
+} ]
